@@ -1,6 +1,30 @@
 import pandas as pd
 import os
 
+# Déclaration de listes pour le traitement des données
+LISTE_SDA = []
+LISTE_NDI = []
+LISTE_GA = []
+
+
+def update_list(sda, ndi_temp, ga_temp):
+    """
+    Mise à jour des listes LISTE_SDA, LISTE_NDI, et LISTE_GA avec les valeurs données.
+
+    Args:
+        sda (int): Sda ajouter à LISTE_SDA.
+        ndi_temp (str): ndi ajouter à LISTE_NDI avec le regex adapté.
+        ga_temp (str): Numéro de GA ajouter à LISTE_NDI avec le regex adapté.
+
+    Returns:
+        None
+    """
+
+    LISTE_SDA.append(sda)
+    LISTE_NDI.append(fr"!(^.*$)!sip:\1@SAG-OPER-URGENCE;PAI={ndi_temp}!")    # f = f-string , r = Raw f-strings
+    LISTE_GA.append(fr"!(^.*$)!sip:\1@SA-Aastra-ToIP{ga_temp}-10!")
+
+
 print("Traitement des données en cours ...")
 if os.path.exists("exemple.xlsx"):  # vérification que le fichier existe dans le répertoire
     # Selection des colonnes qu'on souhaite traiter
@@ -15,11 +39,6 @@ if os.path.exists("exemple.xlsx"):  # vérification que le fichier existe dans l
     Ga = df["GA"].values
     start_sda = df["Début SDA"].values
     end_sda = df["Fin SDA"].values
-
-    # Déclaration de nouvelles listes pour le traitement des données
-    liste_sda = []
-    liste_ndi = []
-    liste_ga = []
 
     # récupération et traitement de chaques champs de chaques colones
     for s_sda, e_sda, ndi, ga in zip(start_sda, end_sda, ndi_frais, Ga):
@@ -38,9 +57,7 @@ if os.path.exists("exemple.xlsx"):  # vérification que le fichier existe dans l
 
                 # Traitement du (ou des) centaine(s) de SDA
                 for _ in range(nb_cent):
-                    liste_sda.append(s_sda_cent)
-                    liste_ndi.append(fr"!(^.*$)!sip:\1@SAG-OPER-URGENCE;PAI={ndi}!")
-                    liste_ga.append(fr"!(^.*$)!sip:\1@SA-Aastra-ToIP{ga}-10!")
+                    update_list(s_sda_cent, ndi, ga)
                     s_sda_cent += 1
 
                 # Traitement des dixaines 
@@ -50,27 +67,22 @@ if os.path.exists("exemple.xlsx"):  # vérification que le fichier existe dans l
                     nb_dix = int(rest_cent / 10)
                     s_sda_dix = s_sda_cent * 10
                     for _ in range(nb_dix):
-                        liste_sda.append(s_sda_dix)
-                        liste_ndi.append(fr"!(^.*$)!sip:\1@SAG-OPER-URGENCE;PAI={ndi}!")
-                        liste_ga.append(fr"!(^.*$)!sip:\1@SA-Aastra-ToIP{ga}-10!")
+                        update_list(s_sda_dix, ndi, ga)
                         s_sda_dix += 1
 
                     # Traitement des unités
                     if 0 < rest_dix < 10:
                         s_sda_dix *= 10
+                        sda_unit = s_sda_dix
                         for _ in range(rest_dix + 1):
-                            liste_sda.append(s_sda_dix)
-                            liste_ndi.append(fr"!(^.*$)!sip:\1@SAG-OPER-URGENCE;PAI={ndi}!")
-                            liste_ga.append(fr"!(^.*$)!sip:\1@SA-Aastra-ToIP{ga}-10!")
+                            update_list(sda_unit, ndi, ga)
                             s_sda_dix += 1
 
             else:
                 # Traitement de(s) unité(s)
                 nb_unit = plage_sda % 10
                 for _ in range(nb_unit):
-                    liste_sda.append(s_sda)
-                    liste_ndi.append(fr"!(^.*$)!sip:\1@SAG-OPER-URGENCE;PAI={ndi}!")
-                    liste_ga.append(fr"!(^.*$)!sip:\1@SA-Aastra-ToIP{ga}-10!")
+                    update_list(s_sda, ndi, ga)
                     s_sda += 1
 
                 # Traitement de(s) dixaine(s)
@@ -78,9 +90,7 @@ if os.path.exists("exemple.xlsx"):  # vérification que le fichier existe dans l
                 if nb_dix >= 1:
                     s_sda_dix = s_sda // 10
                     for _ in range(nb_dix):
-                        liste_sda.append(s_sda_dix)
-                        liste_ndi.append(fr"!(^.*$)!sip:\1@SAG-OPER-URGENCE;PAI={ndi}!")
-                        liste_ga.append(fr"!(^.*$)!sip:\1@SA-Aastra-ToIP{ga}-10!")
+                        update_list(s_sda_dix, ndi, ga)
                         s_sda_dix += 1
 
                     # Traitement de(s) centaine(s)
@@ -88,9 +98,7 @@ if os.path.exists("exemple.xlsx"):  # vérification que le fichier existe dans l
                     if nb_cent >= 1:
                         s_sda_cent = s_sda_dix // 10
                         for _ in range(nb_cent):
-                            liste_sda.append(s_sda_cent)
-                            liste_ndi.append(fr"!(^.*$)!sip:\1@SAG-OPER-URGENCE;PAI={ndi}!")
-                            liste_ga.append(fr"!(^.*$)!sip:\1@SA-Aastra-ToIP{ga}-10!")
+                            update_list(s_sda_cent, ndi, ga)
                             s_sda_cent += 1
 
         else:
@@ -101,43 +109,38 @@ if os.path.exists("exemple.xlsx"):  # vérification que le fichier existe dans l
                 s_sda_dix = str(s_sda)
                 s_sda_dix = int(s_sda_dix[:-1])
                 for _ in range(nb_dix):
-                    liste_sda.append(s_sda_dix)
-                    liste_ndi.append(fr"!(^.*$)!sip:\1@SAG-OPER-URGENCE;PAI={ndi}!")
-                    liste_ga.append(fr"!(^.*$)!sip:\1@SA-Aastra-ToIP{ga}-10!")
+                    update_list(s_sda_dix, ndi, ga)
                     s_sda_dix += 1
                 if rest_dix < 10:
                     s_sda_dix *= 10
+                    s_sda = s_sda_dix
                     for _ in range(rest_dix):
-                        liste_sda.append(s_sda_dix)
-                        liste_ndi.append(fr"!(^.*$)!sip:\1@SAG-OPER-URGENCE;PAI={ndi}!")
-                        liste_ga.append(fr"!(^.*$)!sip:\1@SA-Aastra-ToIP{ga}-10!")
+                        update_list(s_sda, ndi, ga)
                         s_sda_dix += 1
 
             else:
                 for _ in range(plage_sda):
-                    liste_sda.append(s_sda)
-                    liste_ndi.append(fr"!(^.*$)!sip:\1@SAG-OPER-URGENCE;PAI={ndi}!")
-                    liste_ga.append(fr"!(^.*$)!sip:\1@SA-Aastra-ToIP{ga}-10!")
+                    update_list(s_sda, ndi, ga)
                     s_sda += 1
 
     # Convertion de la liste de Sda en chaine de caractère + ajouter le 0 au début
-    Liste_Sda = [f"0{str(sda)}" for sda in liste_sda]
+    Liste_sda = [f"0{str(sda)}" for sda in LISTE_SDA]
 
     # création d'un dossier sauf si il existe déjà
     os.makedirs('imports/', exist_ok=True)
     print("Création des fichers d'imports de masse dans le dossier imports: En cours ...")
 
     # Création des fichiers d'import de masse
-    df_10D = pd.DataFrame({"OPERATION": "Add", "PUBID": Liste_Sda, "SED": liste_ga})
+    df_10D = pd.DataFrame({"OPERATION": "Add", "PUBID": Liste_sda, "SED": LISTE_GA})
     df_10D.to_csv('imports/import_routage_SDA.csv', index=False)
 
-    df_ndi = pd.DataFrame({"OPERATION": "Add", "PUBID": Liste_Sda, "SED": liste_ndi})
+    df_ndi = pd.DataFrame({"OPERATION": "Add", "PUBID": Liste_sda, "SED": LISTE_NDI})
     df_ndi.to_csv('imports/import_NDI_Frais.csv', index=False)
 
     print("Création des fichers d'imports de masse dans le dossier imports: Terminé")
 
 else:
     print("Le fichier n'existe pas ou le nom du fichier n'est pas correct.")
-    print("Nom du fichier: FICHIER DE SUIVI T-SIP_v2.xlsx")
+    print("Nom du fichier: exemple.xlsx")
     print("Merci de vérifier le nom du fichier ou la présence du fichier dans le même répertoire que l'exécutable.")
 os.system("pause")
