@@ -7,22 +7,22 @@ LISTE_NDI = []
 LISTE_GA = []
 
 
-def update_list(sda, ndi_temp, ga_temp):
+def update_list(sda, ndi, ga):
     """
     Mise à jour des listes LISTE_SDA, LISTE_NDI, et LISTE_GA avec les valeurs données.
 
     Args:
         sda (int): Sda ajouter à LISTE_SDA.
-        ndi_temp (str): ndi ajouter à LISTE_NDI avec le regex adapté.
-        ga_temp (str): Numéro de GA ajouter à LISTE_NDI avec le regex adapté.
+        ndi (str): ndi ajouter à LISTE_NDI avec le regex adapté.
+        ga (str): Numéro de GA ajouter à LISTE_NDI avec le regex adapté.
 
     Returns:
         None
     """
 
-    LISTE_SDA.append(sda)
-    LISTE_NDI.append(fr"!(^.*$)!sip:\1@SAG-OPER-URGENCE;PAI={ndi_temp}!")    # f = f-string , r = Raw f-strings
-    LISTE_GA.append(fr"!(^.*$)!sip:\1@SA-Aastra-ToIP{ga_temp}-10!")
+    LISTE_SDA.append(f"0{sda}")
+    LISTE_NDI.append(fr"!(^.*$)!sip:\1@SAG-OPER-URGENCE;PAI=0{ndi}!")  # f = f-string , r = Raw f-strings
+    LISTE_GA.append(fr"!(^.*$)!sip:\1@SA-Aastra-ToIP{ga}-10!")
 
 
 print("Traitement des données en cours ...")
@@ -36,12 +36,12 @@ if os.path.exists("exemple.xlsx"):  # vérification que le fichier existe dans l
 
     # Récupération de toutes les données de chaques colonnes
     ndi_frais = df["NDI FRAIS"].values
-    Ga = df["GA"].values
+    ga = df["GA"].values
     start_sda = df["Début SDA"].values
     end_sda = df["Fin SDA"].values
 
     # récupération et traitement de chaques champs de chaques colones
-    for s_sda, e_sda, ndi, ga in zip(start_sda, end_sda, ndi_frais, Ga):
+    for s_sda, e_sda, ndi, ga in zip(start_sda, end_sda, ndi_frais, ga):
         end_int = s_sda % 10  # récuperer le dernier chiffre de la SDA
         if end_int == 1:
             s_sda -= 1
@@ -123,18 +123,15 @@ if os.path.exists("exemple.xlsx"):  # vérification que le fichier existe dans l
                     update_list(s_sda, ndi, ga)
                     s_sda += 1
 
-    # Convertion de la liste de Sda en chaine de caractère + ajouter le 0 au début
-    Liste_sda = [f"0{str(sda)}" for sda in LISTE_SDA]
-
     # création d'un dossier sauf si il existe déjà
     os.makedirs('imports/', exist_ok=True)
     print("Création des fichers d'imports de masse dans le dossier imports: En cours ...")
 
     # Création des fichiers d'import de masse
-    df_10D = pd.DataFrame({"OPERATION": "Add", "PUBID": Liste_sda, "SED": LISTE_GA})
+    df_10D = pd.DataFrame({"OPERATION": "Add", "PUBID": LISTE_SDA, "SED": LISTE_GA})
     df_10D.to_csv('imports/import_routage_SDA.csv', index=False)
 
-    df_ndi = pd.DataFrame({"OPERATION": "Add", "PUBID": Liste_sda, "SED": LISTE_NDI})
+    df_ndi = pd.DataFrame({"OPERATION": "Add", "PUBID": LISTE_SDA, "SED": LISTE_NDI})
     df_ndi.to_csv('imports/import_NDI_Frais.csv', index=False)
 
     print("Création des fichers d'imports de masse dans le dossier imports: Terminé")
