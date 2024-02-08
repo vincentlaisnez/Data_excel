@@ -76,7 +76,7 @@ if os.path.exists("exemple.xlsx"):  # vérification que le fichier existe dans l
                         sda_unit = s_sda_dix
                         for _ in range(rest_dix + 1):
                             update_list(sda_unit, ndi, ga)
-                            s_sda_dix += 1
+                            sda_unit += 1
 
             else:
                 # Traitement de(s) unité(s)
@@ -116,7 +116,7 @@ if os.path.exists("exemple.xlsx"):  # vérification que le fichier existe dans l
                     s_sda = s_sda_dix
                     for _ in range(rest_dix):
                         update_list(s_sda, ndi, ga)
-                        s_sda_dix += 1
+                        s_sda += 1
 
             else:
                 for _ in range(plage_sda):
