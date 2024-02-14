@@ -50,7 +50,7 @@ if os.path.exists("exemple.xlsx"):  # vérification que le fichier existe dans l
 
         # boucle pour traiter si le nombre de SDA est supérieur ou égale à 100
         if nb_cent >= 1:
-            if end_int in [0, 1] and (s_sda % 100) == 0:  # vérification du dernier chiffre de la SDA
+            if s_sda % 100 == 0:  # vérification du dernier chiffre de la SDA
                 nb_cent = int(plage_sda / 100)
                 s_sda_cent = str(s_sda)
                 s_sda_cent = int(s_sda_cent[:-2])
